@@ -2,6 +2,7 @@
 using System.Threading;
 using NoiseDetector;
 using System;
+using System.Configuration;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
 
@@ -30,24 +31,11 @@ namespace NoiseDetectionApp
             client.BaseAddress = new Uri("https://noisedetectionfunctions.azurewebsites.net/api/AddEventHttpTrigger?code=eCFnaCPKSLtLwFhuLNdEpchsuJXZGosUzdw0AqTCedBXBa3Nh5Iw3Q==");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //var status = client.GetAsync(client.BaseAddress + $"&deviceID={deviceID}&noiseLevel=noise").Result.Content.ReadAsStringAsync().Result;
 
             t = new Timer(new TimerCallback(timerEvent));
             t.Change(5000, Timeout.Infinite);
 
-            //try
-            //{
-
-            //    var url = await SendNoiseNotification("7676");
-
-
-
-
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(e.Message);
-            //}
+           
             Console.WriteLine("NoiseDetection is up and running. Press any key to exit.");
             Console.ReadLine();
         }
@@ -56,7 +44,7 @@ namespace NoiseDetectionApp
         {
             string status;
             var volume = AudioRecorderContainer.GetVolume()*(-100);
-            if (volume * 1000 > 3)//if it's noisy 
+            if (volume * 1000 > Convert.ToInt32(ConfigurationManager.AppSettings["NoiseLevel"]))//if it's noisy 
             {
                 noisecounts++;
                 fastSamplingCount++;
@@ -82,15 +70,7 @@ namespace NoiseDetectionApp
             t.Change(interval, Timeout.Infinite);
 
         }
-        static async Task<Uri> SendNoiseNotification(string deviceId)
-        {
-            var stringContent = new StringContent("noise" + deviceId);
-            HttpResponseMessage response = await client.PostAsync("posts/", stringContent);
-            response.EnsureSuccessStatusCode();
-
-
-            return response.Headers.Location;
-        }
+       
         public static class AudioRecorderContainer
         {
             private static AudioRecorder _recorder;
